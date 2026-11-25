@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E2124">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
+<title>JERL Gestión de Obra</title>
+<style>
+:root{--carbon:#1E2124;--grafito:#4A4F55;--rojo:#C8202A;--suave:#FBEAEA;--fondo:#F5F4F2;--linea:#E2DFDA;--ok:#2E7D32;--amar:#C9A100;--nar:#E8710A;--mal:#D32F2F;--azul:#5B6BB5}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--carbon);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--linea)}
+header img{height:36px}header .info{flex:1;min-width:0}header .info b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header .info span{font-size:12px;color:var(--grafito)}
+#bMenu{border:0;background:var(--carbon);color:#fff;border-radius:10px;width:42px;height:38px;font-size:20px;cursor:pointer}
+.sin-sesion header,.sin-sesion nav{display:none}
+#cuerpo{display:flex;min-height:calc(100vh - 54px)}
+nav{width:230px;flex:none;background:#fff;border-right:1px solid var(--linea);padding:10px 8px;position:sticky;top:54px;height:calc(100vh - 54px);overflow:auto}
+nav a{display:block;padding:9px 12px;border-radius:9px;color:var(--carbon);text-decoration:none;font-weight:500;font-size:14px}nav a:hover{background:var(--fondo)}nav a.activo{background:var(--carbon);color:#fff}
+main{flex:1;min-width:0;max-width:1100px;margin:0 auto;padding:14px}
+@media(max-width:860px){nav{position:fixed;left:-260px;top:54px;z-index:30;transition:left .2s;box-shadow:4px 0 16px rgba(0,0,0,.15)}body.menu-abierto nav{left:0}main{padding:10px}}
+@media(min-width:861px){#bMenu{display:none}}
+.card{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:14px;margin:0 0 12px}
+.card.error{border-color:var(--mal);color:var(--mal)}
+h1{font-size:20px;margin:0}h2{font-size:16px;margin:4px 0 10px}h3{font-size:14px;margin:14px 0 6px;padding:6px 10px;background:var(--carbon);color:#fff;border-radius:8px}h4{margin:10px 0 4px;font-size:13px}
+.titulo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 12px}.acciones{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border:0;border-radius:11px;font:600 14px system-ui,Arial;cursor:pointer;background:var(--carbon);color:#fff;text-decoration:none}
+.btn.sec{background:#fff;color:var(--carbon);border:1px solid var(--linea)}.btn.rojo{background:var(--rojo);color:#fff}.btn.sec.rojo{background:#fff;color:var(--rojo);border-color:var(--rojo)}
+.btn.mini{min-height:34px;padding:0 12px;font-size:13px}.btn:disabled{opacity:.5}
+.btn-x{border:0;background:var(--suave);color:var(--rojo);border-radius:8px;width:34px;height:34px;font-size:20px;cursor:pointer;align-self:center}
+.barra{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 14px}
+.campo{margin:8px 0}.campo label{display:block;font-size:12.5px;font-weight:650;color:var(--grafito);margin:0 0 3px}.campo.mini{margin:4px 0;min-width:120px;flex:1}
+input,select,textarea{width:100%;font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--linea);border-radius:9px;background:#fff;color:inherit}
+input:disabled,select:disabled,textarea:disabled{background:#F2F1EF;color:#444}
+select.mal{background:var(--suave);color:var(--rojo);font-weight:700}
+.ayuda{font-size:12px;color:var(--grafito);margin:3px 0 6px;line-height:1.35}
+.fila-in{display:flex;flex-wrap:wrap;gap:10px}.fila-in>.campo{flex:1;min-width:150px}
+.opciones{display:flex;flex-wrap:wrap;gap:6px}.op{border:1px solid var(--linea);background:#fff;border-radius:9px;padding:7px 11px;font:600 13px system-ui;cursor:pointer;color:var(--carbon)}
+.op.sel{background:var(--carbon);color:#fff;border-color:var(--carbon)}.opciones.cmp .op{min-width:44px}
+.chkl{display:flex;align-items:center;gap:6px}.chkl input{width:auto}
+.fsec{margin:0 0 6px}.fsec>h3{margin-top:18px}
+.lista .li{display:grid;grid-template-columns:1fr auto;gap:6px 10px;padding:8px 0;border-bottom:1px solid var(--linea)}.lista .li .obs{grid-column:1/-1;font-size:13px;padding:6px 8px}
+.lista .li.mal{background:var(--suave);margin:0 -8px;padding:8px}.lt{font-size:13.5px}
+.filas .fila,.fila{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:flex-end;border:1px solid var(--linea);border-radius:11px;padding:8px 10px;margin:6px 0;background:#FCFCFB}
+.fila-n{font-weight:700;color:var(--grafito);font-size:12px;min-width:26px;align-self:center}.etq{font-weight:600;font-size:13px;align-self:center;flex:1;min-width:140px}.etq.etq2{font-weight:400;font-size:12px;color:var(--grafito)}
+.firma-caja{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.firma-caja img{height:48px;border:1px solid var(--linea);border-radius:8px;background:#fff}.firma-caja small{color:var(--grafito)}
+.tleg{width:auto;border-collapse:collapse;font-size:13px}.tleg td,.tleg th{border:1px solid var(--linea);padding:4px 10px}
+.tmat{border-collapse:collapse;font-size:12.5px;min-width:620px}.tmat td,.tmat th{border:1px solid var(--linea);padding:4px}.tmat select{padding:4px;font-size:13px;min-width:52px}
+.nota{font-size:12.5px;font-style:italic;color:var(--grafito)}.texto{font-size:13px}.destacado{padding:10px;border-radius:10px;background:var(--fondo);font-weight:600;margin:6px 0}
+.horas{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}.horas .op{padding:6px 0;text-align:center}
+.sub{display:block;font-weight:700;margin:12px 0 4px;font-size:13px}
+.scroll{overflow:auto;-webkit-overflow-scrolling:touch}
+.tdatos{width:100%;border-collapse:collapse;font-size:13px;background:#fff}.tdatos th{background:var(--fondo);text-align:left;padding:8px;border-bottom:2px solid var(--linea);white-space:nowrap;font-size:12px}
+.tdatos td{padding:7px 8px;border-bottom:1px solid var(--linea);vertical-align:middle}.tdatos tr:hover td{background:#FAF9F7}.tdatos .num{text-align:right;white-space:nowrap}.tdatos td.vacio{color:var(--grafito);text-align:center;padding:18px}
+.tdatos input{min-width:130px;padding:5px}.tdatos.matriz select{padding:5px;min-width:56px}.totales{max-width:520px;margin-left:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:650;background:var(--fondo);color:var(--grafito);white-space:nowrap}
+.chip.ok{background:#E3F2E5;color:var(--ok)}.chip.bad{background:var(--suave);color:var(--rojo)}.chip.warn{background:#FFF0E0;color:var(--nar)}
+.est-borrador,.est-abierta,.est-detectado{background:#FFF4CC;color:#7A5D00}.est-cerrada,.est-por-aprobar,.est-sustentado,.est-en-tránsito,.est-elaborada{background:#FFF0E0;color:var(--nar)}
+.est-aprobada,.est-aprobado,.est-cerrado,.est-recibida-en-obra,.est-recibido,.est-autorizado,.est-con-vo-bo-,.est-activo,.est-bueno,.est-pactado{background:#E3F2E5;color:var(--ok)}
+.est-anulado,.est-rechazado,.est-retirado,.est-dañado,.est-dado-de-baja{background:var(--suave);color:var(--rojo)}.est-cobrado,.est-en-compra{background:#E8EAF6;color:var(--azul)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:0 0 12px}.kpi{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--carbon);border-radius:12px;padding:10px 12px}
+.kpi span{display:block;font-size:12px;color:var(--grafito)}.kpi b{font-size:22px}.kpi small{display:block;font-size:11px;color:var(--grafito)}
+.alerta{display:block;padding:8px 10px;margin:6px 0;border-left:5px solid;border-radius:8px;background:var(--fondo);color:var(--carbon);text-decoration:none;font-size:13.5px}
+.accesos{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.ingreso{max-width:380px;margin:40px auto;background:#fff;border:1px solid var(--linea);border-radius:16px;padding:22px}.ingreso img{display:block;height:70px;margin:0 auto 8px}.ingreso h1{text-align:center;margin-bottom:10px}.ingreso .btn{width:100%;margin-top:10px}
+.vista{width:100%;border-radius:10px;display:none;margin:10px 0;border:1px solid var(--linea)}
+.galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:10px}.galeria figure{margin:0;background:#fff;border:1px solid var(--linea);border-radius:10px;overflow:hidden}
+.mini-img{aspect-ratio:4/3;background:var(--fondo)}.mini-img img{width:100%;height:100%;object-fit:cover}.galeria figcaption{font-size:11.5px;padding:6px}
+.trab .opciones{margin:8px 0}.det{display:flex;flex-wrap:wrap;gap:0 10px}.det .campo{flex:1;min-width:120px}
+.flujo .paso{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--linea)}.flujo .paso.hecho b{color:var(--ok)}.flujo .paso span{flex:1;font-size:13px;color:var(--grafito)}
+.tarjetas{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.tarjeta{display:flex;flex-direction:column;gap:3px;background:#fff;border:1px solid var(--linea);border-radius:12px;padding:12px;color:var(--carbon);text-decoration:none}
+.tarjeta b{font-size:13.5px}.tarjeta small{font-size:11.5px;color:var(--grafito)}.tarjeta small.mal{color:var(--rojo);font-weight:600}
+.pestanas{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.pestanas a{padding:7px 12px;border-radius:99px;background:#fff;border:1px solid var(--linea);color:var(--carbon);text-decoration:none;font-size:13px}.pestanas a.activo{background:var(--carbon);color:#fff}
+.grafico{width:100%;max-width:760px;height:auto;border:1px solid var(--linea);border-radius:10px;background:#fff}
+.modal-fondo{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:#fff;width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px}@media(min-width:700px){.modal-fondo{align-items:center}.modal{border-radius:16px}}
+.modal-pie{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:12px;position:sticky;bottom:-16px;background:#fff;padding:8px 0}
+.pad{width:100%;height:auto;border:2px dashed var(--grafito);border-radius:10px;touch-action:none;background:#fff}
+#avisos{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:60;display:grid;gap:6px;width:min(560px,94vw);pointer-events:none}
+.aviso{padding:10px 14px;border-radius:10px;background:var(--carbon);color:#fff;font-size:13.5px;box-shadow:0 4px 18px rgba(0,0,0,.2)}.aviso.rojo{background:var(--mal)}.aviso.verde{background:var(--ok)}.aviso.naranja{background:var(--nar)}
+#cargando{position:fixed;inset:0;z-index:70;background:rgba(255,255,255,.65);display:none;align-items:center;justify-content:center;gap:10px;font-weight:600}
+#cargando i{width:22px;height:22px;border:3px solid var(--linea);border-top-color:var(--rojo);border-radius:50%;animation:g 0.8s linear infinite}@keyframes g{to{transform:rotate(360deg)}}
+.barra-av{position:relative;height:10px;background:#ECEAE6;border-radius:99px;overflow:visible;min-width:110px}.barra-av i{position:absolute;left:0;top:0;bottom:0;background:#2E7D32;border-radius:99px}
+.barra-av b{position:absolute;top:-3px;width:3px;height:16px;background:#1E2124;margin-left:-1px}.av small{font-size:11px;color:var(--grafito)}.tiempo{display:grid;gap:4px;font-size:12px;color:var(--grafito)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0 12px}.ejecutivo h2{margin-bottom:2px}.mal{color:var(--rojo)}
+.est-terminado{background:#E3F2E5;color:var(--ok)}.est-en-ejecución{background:#FFF4CC;color:#7A5D00}.est-sin-iniciar{background:var(--fondo)}
+.aviso-in{background:#FFF0E0;border-color:#F3C99B}
+</style>
+</head>
+<body>
+<div id="app" class="sin-sesion">
+  <header><button id="bMenu" aria-label="Menú" onclick="document.body.classList.toggle('menu-abierto')">☰</button><img src="logo.png" alt="JERL"><div class="info"><b id="proyecto">JERL Gestión de Obra</b><span id="usuario"></span></div>
+    <span class="chip" id="bRed">…</span><button class="chip warn" id="bCola" style="display:none;border:0;cursor:pointer" onclick="JERL.enviarCola()"></button></header>
+  <div id="cuerpo"><nav id="nav"></nav><main id="main"></main></div>
+</div>
+<div id="avisos"></div><div id="cargando"><i></i><span>Procesando…</span></div>
+<script src="config.js"></script>
+<script src="esquemas1.js"></script><script src="esquemas2.js"></script><script src="esquemas3.js"></script><script src="esquemas4.js"></script>
+<script src="formularios.js"></script><script src="internos.js"></script><script src="nucleo.js"></script>
+<script src="modulos1.js"></script><script src="modulos2.js"></script><script src="admin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+<script>
+(async () => {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  JERL.estadoRed();
+  if (JERL.token) { try { await JERL._arrancar(); } catch (e) { JERL.salir(); } } else JERL.pantallaIngreso();
+})();
+</script>
+</body>
+</html>
