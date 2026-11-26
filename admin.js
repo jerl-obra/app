@@ -3,7 +3,7 @@
   'use strict';
   const J = window.JERL, { el, fechaCO } = J;
   const MODS = [['inicio', 'Inicio'], ['bitacora', 'Bitácora'], ['fotos', 'Fotos'], ['personal', 'Personal'], ['cantidades', 'Cantidades'], ['cronograma', 'Cronograma (fechas reales)'], ['avance', 'Avance'],
-    ['actas', 'Actas'], ['adicionales', 'Adicionales'], ['requisiciones', 'Requisiciones'], ['inventario', 'Inventario'], ['sst', 'SST'], ['documentos', 'Documentos'], ['admin', 'Administrador']];
+    ['actas', 'Actas'], ['adicionales', 'Adicionales'], ['requisiciones', 'Requisiciones'], ['inventario', 'Inventario'], ['sst', 'SST'], ['documentos', 'Documentos'], ['admin', 'Administrador'], ['facturas', 'Facturas'], ['caja', 'Caja menor']];
   const PEST = [['usuarios', 'Usuarios'], ['permisos', 'Permisos por rol'], ['cargos', 'Cargos'], ['proyecto', 'Proyecto y parámetros'], ['presupuesto', 'Presupuesto y cronograma base'],
     ['tablas', 'Tablas base'], ['festivos', 'Festivos'], ['temporales', 'Permisos temporales'], ['delegaciones', 'Delegaciones'], ['sstper', 'Periodicidad SST'], ['auditoria', 'Auditoría']];
   const guardarCfg = async (clave, valor) => { try { await J.api('config.guardar', { clave, valor }); J.st.config[clave] = valor; J.aviso('Guardado', 'verde'); } catch (e) { J.aviso(e.message, 'rojo'); } };
@@ -131,13 +131,7 @@
     c.append(J.tabla([{ t: 'De', k: 'de' }, { t: 'A', k: 'a' }, { t: 'Desde', f: x => fechaCO(x.desde) }, { t: 'Hasta', f: x => fechaCO(x.hasta) }, { t: 'Motivo', k: 'motivo' },
       { t: 'Estado', f: x => x.activo === false ? 'Revocada' : puede ? el('button', { class: 'btn mini sec', onclick: async () => { const r = await J.api('delegar', { revocar: x.id }); J.st.config.delegaciones = r.delegaciones; J.ir('#/admin/delegaciones'); } }, 'Revocar') : 'Vigente' }], l));
   };
-  P.sstper = async (c, adm) => {
-    const l = JSON.parse(JSON.stringify(J.st.config.sstPeriodicidad || []));
-    const R = [{ v: 'asistencia', t: 'Diaria (asistencia)' }, { v: 'semanal', t: 'Semanal' }, { v: 'quincenal', t: '2 veces al mes' }, { v: 'mensual', t: 'Mensual' }, { v: 'ingreso', t: 'Cada ingreso de personal' }, { v: 'alturas', t: 'Semanal con verificación diaria (solo con trabajo en alturas)' }];
-    c.append(el('p', { class: 'ayuda' }, 'Periodicidad con la que debe diligenciarse cada formato SST (Plan de trabajo SST obras). La app cuenta cada periodo como cumplido solo cuando el formato queda cerrado con firma y evidencia fotográfica; si se vence sin hacerse, queda como incumplimiento en las alertas, en el inicio y en el control mensual. Desactive los que no apliquen a esta obra. La fecha desde la que se exige se define en Proyecto y parámetros (inicio del control SST).'));
-    l.forEach(x => c.append(el('div', { class: 'fila' }, el('div', { class: 'etq' }, x.nombre), J.campo('Periodicidad', J.sel(R, x.regla, v => x.regla = v)), J.campo('Estado', J.sel([{ v: 'true', t: 'Activo' }, { v: 'false', t: 'Inactivo' }], String(x.activo !== false), v => x.activo = v === 'true')))));
-    if (adm && l.length) c.append(el('button', { class: 'btn', onclick: () => guardarCfg('sstPeriodicidad', l) }, 'Guardar'));
-  };
+  P.sstper = async (c) => { J.editorPeriodosSST(c); };
   P.auditoria = async (c) => {
     const r = await J.api('auditoria.listar');
     c.append(el('p', { class: 'ayuda' }, 'Todo lo que se crea, modifica, firma, anula o descarga queda registrado con usuario, fecha y hora. Nada se borra.'));

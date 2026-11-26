@@ -3,7 +3,7 @@
   'use strict';
   const J = window.JERL, { el, esc, fechaCO } = J, $ = J.$;
   const MENU = [['inicio', 'Inicio'], ['bitacora', 'Bitácora diaria'], ['fotos', 'Fotos'], ['personal', 'Personal y asistencia'], ['cantidades', 'Cantidades'], ['avance', 'Cronograma y avance'],
-    ['actas', 'Actas de obra'], ['adicionales', 'Adicionales y no previstos'], ['requisiciones', 'Requisiciones'], ['inventario', 'Inventario y traslados'], ['sst', 'SST'], ['documentos', 'Documentos'], ['admin', 'Administrador']];
+    ['actas', 'Actas de obra'], ['adicionales', 'Adicionales y no previstos'], ['requisiciones', 'Requisiciones'], ['inventario', 'Inventario y traslados'], ['facturas', 'Facturas'], ['caja', 'Caja menor'], ['sst', 'SST'], ['documentos', 'Documentos'], ['admin', 'Administrador']];
   J.PANTALLAS = {};
   const main = () => $('#main');
 
@@ -138,7 +138,7 @@
     al.forEach(x => ca.append(el('a', { class: 'alerta', href: '#/' + (x.modulo === 'inicio' ? 'inicio' : x.modulo), style: 'border-left-color:' + (colores[x.nivel] || '#888') }, el('b', { style: 'color:' + (colores[x.nivel] || '#888') }, x.nivel.toUpperCase()), ' ', x.mensaje)));
     m.append(ca);
     const accesos = [['bitacora', 'Bitácora de hoy', '#/bitacora/' + J.hoy(), 'R'], ['fotos', 'Tomar foto', '#/fotos/nueva', 'R'], ['personal', 'Asistencia de hoy', '#/personal', 'R'], ['cantidades', 'Registrar medición', '#/cantidades', 'R'],
-      ['requisiciones', 'Nueva requisición', '#/requisiciones/nueva', 'R'], ['sst', 'Formatos SST', '#/sst', 'R'], ['avance', 'Cronograma y avance', '#/avance', 'V']].filter(x => J.puede(x[0], x[3]));
+      ['requisiciones', 'Nueva requisición', '#/requisiciones/nueva', 'R'], ['sst', 'Formatos SST', '#/sst', 'R'], ['avance', 'Cronograma y avance', '#/avance', 'V'], ['facturas', 'Facturas', '#/facturas', 'R'], ['caja', 'Caja menor', '#/caja', 'V']].filter(x => J.puede(x[0], x[3]));
     if (accesos.length) m.append(el('h2', {}, 'Accesos rápidos'), el('div', { class: 'accesos' }, accesos.map(x => el('a', { class: 'btn sec', href: x[2] }, x[1]))));
   };
   async function pdfResumen(e) {

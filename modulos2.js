@@ -58,9 +58,10 @@
     const med = (await J.api('mediciones.listar')).mediciones, hoy = J.hoy(), items = J.st.items.slice().sort((a, b) => a.inicioProp < b.inicioProp ? -1 : 1);
     m.append(J.titulo('Cronograma y avance', el('button', { class: 'btn sec', onclick: async () => { try { descargarPar(await J.api('excel.cronograma', { corte: hoy }, { texto: 'Llenando el cronograma…' })); } catch (e) { J.aviso(e.message, 'rojo'); } } }, 'Cronograma (Excel)'),
       el('button', { class: 'btn sec', onclick: async () => { try { descargarPar(await J.api('excel.avance', { corte: hoy }, { texto: 'Llenando el avance y la curva S…' })); } catch (e) { J.aviso(e.message, 'rojo'); } } }, 'Avance y curva S (Excel)')));
-    m.append(el('p', { class: 'ayuda' }, 'Las fechas propuestas son la línea base y están bloqueadas (solo el administrador las cambia). Las fechas reales las registra quien tenga permiso de cronograma. Atraso: verde al día · amarillo 1–2 días · naranja 3–5 · rojo 6–10 · rojo oscuro > 10 · azul = justificado por la Ing. Residente.'));
+    const propEd = ['Residente', 'Administrador'].includes(J.st.yo.rol);
+    m.append(el('p', { class: 'ayuda' }, (propEd ? 'Usted puede corregir las fechas propuestas (inicio y fin) directamente en la tabla: la curva S, el % programado, los atrasos, los hitos, el resumen ejecutivo y los Excel se recalculan con las fechas nuevas, y el cambio queda en la auditoría con la fecha anterior y la nueva. ' : 'Las fechas propuestas solo las cambian la Ing. Residente y el administrador. ') + 'Las fechas reales las registra quien tenga permiso de cronograma. Atraso: verde al día · amarillo 1–2 días · naranja 3–5 · rojo 6–10 · rojo oscuro > 10 · azul = justificado por la Ing. Residente.'));
     const editable = J.puede('cronograma', 'R'), justif = J.puede('avance', 'A');
-    m.append(J.tabla([{ t: 'Ítem', k: 'item' }, { t: 'Actividad', k: 'descripcion' }, { t: 'Inicio propuesto', f: x => fechaCO(x.inicioProp) }, { t: 'Fin propuesto (hito)', f: x => fechaCO(x.finProp) },
+    m.append(J.tabla([{ t: 'Ítem', k: 'item' }, { t: 'Actividad', k: 'descripcion' }, { t: 'Inicio propuesto', f: x => propEd ? J.inp('date', x.inicioProp, v => guardarProp(x, 'inicioProp', v)) : fechaCO(x.inicioProp) }, { t: 'Fin propuesto (hito)', f: x => propEd ? J.inp('date', x.finProp, v => guardarProp(x, 'finProp', v)) : fechaCO(x.finProp) },
       { t: 'Inicio real', f: x => editable ? J.inp('date', x.inicioReal, v => guardarFecha(x, 'inicioReal', v)) : fechaCO(x.inicioReal) },
       { t: 'Fin real', f: x => editable ? J.inp('date', x.finReal, v => guardarFecha(x, 'finReal', v)) : fechaCO(x.finReal) },
       { t: '% programado', f: x => J.pct(programado(x, hoy)), c: 'num' }, { t: '% ejecutado', f: x => J.pct(Math.min(acumulado(med, x.item) / x.cantidad, 9.99)), c: 'num' },
@@ -69,7 +70,14 @@
       { t: '', f: x => justif ? el('button', { class: 'btn mini sec', onclick: () => justificar(x) }, String(x.justificado) === 'true' ? 'Quitar justificación' : 'Justificar') : '' }], items));
     m.append(curvaS(items, med));
   };
-  let tGuardar = null;
+  let tGuardar = null, tProp = null;
+  function guardarProp(it, k, v) {
+    clearTimeout(tProp); tProp = setTimeout(async () => {
+      const n = { item: it.item, inicioProp: it.inicioProp, finProp: it.finProp, [k]: v };
+      try { const r = await J.api('items.fechasProp', n, { texto: 'Guardando fecha propuesta…' }); Object.assign(it, r.item); J.aviso('Fecha propuesta guardada (ítem ' + it.item + '). Se recalculó la programación.', 'verde'); J.ir('#/avance'); }
+      catch (e) { J.aviso(e.message, 'rojo'); J.ir('#/avance'); }
+    }, 900);
+  }
   function guardarFecha(it, k, v) {
     clearTimeout(tGuardar); tGuardar = setTimeout(async () => { try { const r = await J.api('items.fechas', { item: it.item, [k]: v }, { silencio: true }); Object.assign(it, r.item); J.aviso('Fecha real guardada (ítem ' + it.item + ')', 'verde'); } catch (e) { J.aviso(e.message, 'rojo'); } }, 600);
   }
@@ -390,22 +398,27 @@
     if (r.fotos.length) { const im = await J.api('fotos.miniaturas', { ids: r.fotos.slice(0, 24).map(f => f.archivoId) }, { silencio: true }); gal.querySelectorAll('figure').forEach(fg => { const s2 = im.imagenes[fg.dataset.id]; if (s2) fg.firstChild.append(el('img', { src: s2 })); }); }
     return r.fotos;
   }
+  /** Estado de uso del formato hoy, según sus periodos de uso. */
+  const usoSST = id => { const c = (J.st.config.sstPeriodicidad || []).find(x => x.id === id); if (!c) return el('small', {}, 'Sin periodicidad en el plan (no se controla)');
+    const p = (c.periodos || []).find(q => (!q.desde || q.desde <= J.hoy()) && (!q.hasta || q.hasta >= J.hoy()));
+    return el('small', { class: p ? '' : 'mal' }, p ? 'En uso' + (p.hasta ? ' hasta el ' + fechaCO(p.hasta) : '') : 'No se usa hoy (no se exige)'); };
   J.PANTALLAS.sst = async (m, formato, id) => {
     const ORD = window.SST_ORDEN;
     if (!formato) {
       const r = await J.api('registros.listar', { tipo: 'sst', limite: 2000 });
       const ult = {}; r.registros.forEach(x => { if (!ult[x.subtipo] || ult[x.subtipo] < x.fecha) ult[x.subtipo] = x.fecha; });
       let mes = J.hoy().slice(0, 7);
-      m.append(J.titulo('Seguridad y salud en el trabajo', el('button', { class: 'btn sec', onclick: () => reporteCumplimiento(mes.slice(0, 4), mes.slice(5, 7)) }, 'Control mensual del plan SST (PDF)')));
+      m.append(J.titulo('Seguridad y salud en el trabajo', el('a', { class: 'btn sec', href: '#/sst/_periodos' }, 'Formatos en uso (periodos)'), el('button', { class: 'btn sec', onclick: () => reporteCumplimiento(mes.slice(0, 4), mes.slice(5, 7)) }, 'Control mensual del plan SST (PDF)')));
       const cum = el('div', {});
       m.append(el('div', { class: 'card' }, el('h2', {}, 'Cumplimiento del plan de trabajo SST'), el('p', { class: 'ayuda' }, 'Periodicidades: semanal (ATS alturas y demolición, escaleras, andamios, equipos y maquinaria, orden y aseo), 2 veces al mes (botiquines), mensual (extintores, emergencia, eléctricas, locativa, señalización), cada ingreso de personal (inducción, evaluación, entrega de EPP) y permiso de alturas semanal con verificación diaria solo los días en que la bitácora dice que hay trabajo en alturas. Un periodo cuenta como cumplido cuando el formato queda cerrado con firma y evidencia.'),
         J.campo('Mes', J.inp('month', mes, v => { mes = v; panelCumplimiento(cum, v.slice(0, 4), v.slice(5, 7)); })), cum));
       panelCumplimiento(cum, mes.slice(0, 4), mes.slice(5, 7));
       const grupos = {}; ORD.forEach(k => { const e = ESQ[k]; (grupos[e.grupo] = grupos[e.grupo] || []).push(e); });
       Object.keys(grupos).forEach(g => { m.append(el('h2', {}, g), el('div', { class: 'tarjetas' }, grupos[g].map(e => el('a', { class: 'tarjeta', href: '#/sst/' + e.id }, el('b', {}, e.titulo), el('small', {}, e.codigo + ' · v' + e.version),
-        el('small', {}, 'Periodicidad: ' + e.periodicidad), el('small', { class: ult[e.id] ? '' : 'mal' }, ult[e.id] ? 'Último: ' + fechaCO(ult[e.id]) : 'Sin registros'))))); });
+        el('small', {}, 'Periodicidad: ' + e.periodicidad), usoSST(e.id), el('small', { class: ult[e.id] ? '' : 'mal' }, ult[e.id] ? 'Último: ' + fechaCO(ult[e.id]) : 'Sin registros'))))); });
       return;
     }
+    if (formato === '_periodos') { m.append(J.titulo('Formatos SST en uso (periodos de uso)', el('a', { class: 'btn sec', href: '#/sst' }, 'Volver'))); const c = el('div', {}); m.append(c); J.editorPeriodosSST(c); return; }
     const esq = ESQ[formato]; if (!esq) return m.append(el('div', { class: 'card' }, 'Formato no encontrado'));
     if (!id) {
       const r = await J.api('registros.listar', { tipo: 'sst', subtipo: formato });
